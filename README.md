@@ -10,6 +10,12 @@ My Hack the North 2024 Backend Challenge submission.
 - Load the challenge data with `python load_data.py`
 - Run the server with `python app.py`
 
+## Notes
+
+- An effort was made to only make one query to the database for each API request, and to use the cache for the skills endpoint.
+- All the query and update functions are in `app.py`, but could be moved to a separate file for better organization in a larger project.
+- The `load_data.py` script is destructive and will delete all the data in the database before loading the challenge data.
+
 ## API Endpoints
 
 ### `GET /users`
