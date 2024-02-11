@@ -21,12 +21,20 @@ class Participant(db.Model):
     email = db.Column(db.String)
     phone = db.Column(db.String)
     skills = db.relationship("Skills", backref="participant")
+    checked_in = db.Column(db.Boolean, default=False)
+    check_in_id = db.Column(db.Integer, db.ForeignKey('check_in.id'))
 
 class Skills(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     rating = db.Column(db.Integer)
     participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'))
+
+class CheckIn(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'))
+    time = db.Column(db.Integer)
+    volunteer_id = db.Column(db.Integer)
 
 
 # Create caching for the skills' frequency and total rating (to be used in the /skills route)
@@ -55,6 +63,7 @@ def format_participant_data(participant):
             "company": participant.company,
             "email": participant.email,
             "phone": participant.phone,
+            "checked_in": participant.checked_in,
             "skills": []
         }
         for skill in participant.skills:
@@ -62,6 +71,18 @@ def format_participant_data(participant):
                 "skill": skill.name,
                 "rating": skill.rating
             })
+    return output
+
+def format_checkin_data(participant):
+    output = {}
+    output["checked_in"] = participant.checked_in
+    if participant.checked_in:
+        if not participant.check_in_id:
+            return {"error":"Participant has checked in but has no check-in ID"}, 500
+        
+        checkin = CheckIn.query.get_or_404(participant.check_in_id)
+        output["check_in_time"] = checkin.time
+        output["volunteer_id"] = checkin.volunteer_id
     return output
 
 # Update functions
@@ -117,18 +138,7 @@ def users():
     output = {}
     all_participants = Participant.query.all()
     for participant in all_participants:
-        output[participant.id] = {
-            "name": participant.name,
-            "company": participant.company,
-            "email": participant.email,
-            "phone": participant.phone,
-            "skills": []
-        }
-        for skill in participant.skills:
-            output[participant.id]["skills"].append({
-                "skill": skill.name,
-                "rating": skill.rating
-            })
+        output.update(format_participant_data(participant))
 
     return output
 
@@ -158,12 +168,48 @@ def skills():
             }
     return output
 
+@app.route('/checkin', methods=['GET','POST'])
+def checkin():
+    if request.method == "GET":
+        if "participant_id" not in request.args:
+            return {"error":"Participant ID required"}, 400
+        participant = Participant.query.get_or_404(request.args["participant_id"])
+        return format_checkin_data(participant)
+
+    elif request.method == "POST":
+        if not request.json or "participant_id" not in request.json:
+            return {"error":"Participant ID required"}, 400
+
+        if "volunteer_id" not in request.json:
+            return {"error":"Volunteer ID required"}, 400
+
+        participant = Participant.query.get_or_404(request.json["participant_id"])
+        if participant.checked_in:
+            return {"error":"Already checked in"}, 400
+        
+        new_checkin = CheckIn(participant_id=participant.id, time=int(time.time()), volunteer_id=request.json["volunteer_id"])
+        db.session.add(new_checkin)
+
+        # Commit the changes to generate the check-in ID
+        db.session.commit()
+
+        participant.checked_in = True
+        participant.check_in_id = new_checkin.id
+
+        db.session.commit()
+        return format_checkin_data(participant)
+    
+    return {"error":"Invalid request"}, 400
+
 # Run the app
 
 if __name__ == "__main__":
-    with app.app_context():
-        skills_cache = generate_skills_cache()
-        print("Skills cache generated!")
+    try:
+        with app.app_context():
+            skills_cache = generate_skills_cache()
+            print("Skills cache generated!")
+    except Exception as e:
+        print(f"Error generating skills cache: {e}\n Did you initialize the database?")
     
     app.run(port=8000,debug=True)
 

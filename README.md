@@ -233,3 +233,56 @@ The only skill that meets the criteria is "Starlette" with a frequency of 21 and
 }
 ```
 
+### `GET /checkin`
+
+Checks if a user is checked in, and returns the check-in event if they are.
+
+Takes the user's ID as a parameter, and returns a 404 error if the user does not exist.
+
+#### Example Request
+
+Check if the participant with ID 100 is checked in.
+
+```
+GET /checkin?participant_id=100
+```
+
+#### Example Response
+
+The participant with ID 100 is not checked in.
+
+```json
+{
+    "checked_in": false
+}
+```
+
+### `POST /checkin`
+
+Checks in a participant with a volunteer id, and returns the check-in event's details.
+
+Takes the user's ID and volunteer's ID (just any interger for testing) in the json body, and returns a 404 error if the user does not exist, or a 400 error if the user is already checked in.
+
+#### Example Request
+
+Check in the participant with ID 100 with volunteer ID 1.
+
+```
+POST /checkin
+{
+    "participant_id": 100,
+    "volunteer_id": 1
+}
+```
+
+#### Example Response
+
+The participant with ID 100 is checked in with volunteer ID 1.
+
+```json
+{
+    "check_in_time": 1707689887,
+    "checked_in": true,
+    "volunteer_id": 1
+}
+```
