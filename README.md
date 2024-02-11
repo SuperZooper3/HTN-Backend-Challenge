@@ -16,6 +16,35 @@ My Hack the North 2024 Backend Challenge submission.
 - All the query and update functions are in `app.py`, but could be moved to a separate file for better organization in a larger project.
 - The `load_data.py` script is destructive and will delete all the data in the database before loading the challenge data.
 
+## Database Schema
+
+The database schema consists of three tables: `Participant`, `Skills`, and `CheckIn`.
+
+The `Participant` table has the following columns:
+
+- `id` (int): The unique identifier for the participant.
+- `name` (str): The name of the participant.
+- `company` (str): The company of the participant.
+- `email` (str): The email of the participant.
+- `phone` (str): The phone number of the participant.
+- `checked_in` (bool): Whether the participant has checked in.
+- `check_in_id` (int): The ID of the check-in event, if the participant has checked in.
+- `skills` (list of `Skills`): The skills of the participant, modeled as a one-to-many relationship with the `Skills` table.
+
+The `Skills` table has the following columns:
+
+- `id` (int): The unique identifier for the skill.
+- `name` (str): The name of the skill.
+- `rating` (int): The rating of the participant for the skill.
+- `participant_id` (int): The ID of the participant, modeling a many-to-one relationship with the `Participant` table.
+
+The `CheckIn` table has the following columns:
+
+- `id` (int): The unique identifier for the check-in event.
+- `participant_id` (int): The ID of the participant, modeling a many-to-one relationship with the `Participant` table.
+- `time` (int): The time of the check-in event.
+- `volunteer_id` (int): The ID of the volunteer who checked in the participant (just a number for simplicity, but could be a foreign key to a `Volunteer` table in a real-world scenario).
+
 ## API Endpoints
 
 ### `GET /users`
@@ -82,7 +111,7 @@ A snippet of the response for all the users.
 }
 ```
 
-### `GET /users/<int:user_id>`
+### `GET /users/<int:participant_id>`
 
 Returns a json dictionary of the user with the specified ID.
 
@@ -121,7 +150,7 @@ The user with ID 100 is "Carolyn Gray", and we return their information.
 }
 ```
 
-### `PUT /users/<int:user_id>`
+### `PUT /users/<int:participant_id>`
 
 Updates fields of the user with the specified ID, and returns the updated user's information.
 
