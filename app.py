@@ -6,6 +6,9 @@ import os
 import time
 DATABASE_NAME = "htn.db"
 
+# Config settings
+PAGE_SIZE = 50
+
 # Create the Flask app and connect it to the SQLite database
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATABASE_NAME}'
@@ -173,7 +176,25 @@ def check_skill_average_rating(skill, min_average_rating, max_average_rating):
 @app.route('/users', methods=['GET'])
 def users():
     output = {}
+
     all_participants = Participant.query.all()
+
+    # Apply filters
+    if "checked_in" in request.args:
+        checked_in_needed = request.args["checked_in"].lower() == "true"
+        all_participants = [participant for participant in all_participants if participant.checked_in == checked_in_needed]
+
+    if "page" in request.args:
+        page = request.args["page"]
+        if not page.isnumeric():
+            return {"error":"Invalid page number"}, 400
+        
+        page = int(page)
+        if page < 1:
+            return {"error":"Invalid page number"}, 400
+        
+        all_participants = all_participants[(page-1)*PAGE_SIZE:page*PAGE_SIZE]
+
     for participant in all_participants:
         output.update(format_participant_data(participant))
 

@@ -1,5 +1,5 @@
 # Hack-the-North-Backend-Challenge
-My Hack the North 2024 Backend Challenge submission.
+My Hack the North 2024 Backend Challenge submission. If you have any questions or issues, don't hesitate to reach out to me on discord at `@superzooper`.
 
 ## Setup
 
@@ -15,7 +15,7 @@ My Hack the North 2024 Backend Challenge submission.
 - An effort was made to only make one query to the database for each API request, and to use the cache for the skills endpoint.
 - All the query and update functions are in `app.py`, but could be moved to a separate file for better organization in a larger project.
 - The `load_data.py` script is destructive and will delete all the data in the database before loading the challenge data.
-- All endpoints were tested with Postman and the responses were manually validated with the expected responses in the challenge description and in this specifcation. The test are included in `HTN Challenge.postman_collection.json`.
+- All endpoints were tested with Postman and the responses were manually validated with the expected responses in the challenge description and in this specifcation. The test are included in `HTN Challenge.postman_collection.json` and have many more examples than the ones in this README.
 
 ## Database Schema
 
@@ -50,7 +50,7 @@ The `CheckIn` table has the following columns:
 
 High level list:
 
-- `GET /users`: Get all users
+- `GET /users`: Get all users (with optional filters for checked in status and pagination 50 at a time)
 - `GET /users/<int:participant_id>`: Get a user by ID
 - `PUT /users/<int:participant_id>`: Update a user by ID
 - `GET /skills`: Get all skills (with optional filters for frequency, average rating, and keyword)
@@ -62,7 +62,10 @@ High level list:
 
 Returns a json dictionary of all users in the database with their IDs as keys.
 
-No parameters are required.
+Optional arguments:
+
+- `checked_in` (bool): Whether to filter the users by checked in status. Default is no filter, accepts `true` or `false`.
+- `page` (int): The page number to return, with 50 users per page. Default is no pagination (i.e. all users).
 
 #### Example Request
 
