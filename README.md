@@ -15,6 +15,7 @@ My Hack the North 2024 Backend Challenge submission.
 - An effort was made to only make one query to the database for each API request, and to use the cache for the skills endpoint.
 - All the query and update functions are in `app.py`, but could be moved to a separate file for better organization in a larger project.
 - The `load_data.py` script is destructive and will delete all the data in the database before loading the challenge data.
+- All endpoints were tested with Postman and the responses were manually validated with the expected responses in the challenge description and in this specifcation. The test are included in `HTN Challenge.postman_collection.json`.
 
 ## Database Schema
 
@@ -25,7 +26,7 @@ The `Participant` table has the following columns:
 - `id` (int): The unique identifier for the participant.
 - `name` (str): The name of the participant.
 - `company` (str): The company of the participant.
-- `email` (str): The email of the participant.
+- `email` (str): The email of the participant. This is also treated as a unique field to prevent duplicate registrations, so some of the 1000 example participants aren't registered in the database to avoid duplicate emails.
 - `phone` (str): The phone number of the participant.
 - `checked_in` (bool): Whether the participant has checked in.
 - `check_in_id` (int): The ID of the check-in event, if the participant has checked in.
@@ -46,6 +47,16 @@ The `CheckIn` table has the following columns:
 - `volunteer_id` (int): The ID of the volunteer who checked in the participant (just a number for simplicity, but could be a foreign key to a `Volunteer` table in a real-world scenario).
 
 ## API Endpoints
+
+High level list:
+
+- `GET /users`: Get all users
+- `GET /users/<int:participant_id>`: Get a user by ID
+- `PUT /users/<int:participant_id>`: Update a user by ID
+- `GET /skills`: Get all skills (with optional filters for frequency, average rating, and keyword)
+- `GET /checkin`: Check if a user is checked in
+- `POST /checkin`: Check in a user with a volunteer ID
+- `POST /register`: Register a new user
 
 ### `GET /users`
 
