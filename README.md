@@ -154,7 +154,7 @@ The user with ID 100 is "Carolyn Gray", and we return their information.
 
 Updates fields of the user with the specified ID, and returns the updated user's information.
 
-Takes the user's ID as a parameter, and a json body with the fields to update.
+Takes the user's ID as a parameter, and a json body with a dictionary of fields to update.
 
 If fields exist (e.g. `name`, `email`, `phone`, `company`), they will be updated. If they do not exist, they will be ignored. All of these fields are optional and are treated as text.
 
@@ -211,6 +211,7 @@ Optional arguments:
 - `max_frequency` (int): The maximum frequency of the skill to be included in the response. Default is infinity (i.e. no maximum).
 - `min_average_rating` (int): The minimum average rating of the skill to be included in the response. Default is 0.
 - `max_average_rating` (int): The maximum average rating of the skill to be included in the response. Default is infinity (i.e. no maximum).
+- `keyword` (str): A keyword to filter the skills for if they contain the keyword in their name (case-insensitive). Default is no keyword constraint.
 
 #### Example Request
 
@@ -233,6 +234,44 @@ The only skill that meets the criteria is "Starlette" with a frequency of 21 and
 }
 ```
 
+#### Example Request 2
+
+Get all the skills with "py" in their name.
+
+```
+GET /skills?keyword=py
+```
+
+#### Example Response 2
+
+The skills that meet the criteria are "PyTorch", "Pygame", "Python", "SciPy" and "Numpy".
+
+```json
+{
+    "Numpy": {
+        "average_rating": 2.45,
+        "frequency": 20
+    },
+    "PyTorch": {
+        "average_rating": 2.03,
+        "frequency": 33
+    },
+    "Pygame": {
+        "average_rating": 2.58,
+        "frequency": 31
+    },
+    "Python": {
+        "average_rating": 3.16,
+        "frequency": 51
+    },
+    "SciPy": {
+        "average_rating": 2.44,
+        "frequency": 34
+    }
+}
+```
+
+
 ### `GET /checkin`
 
 Checks if a user is checked in, and returns the check-in event if they are.
@@ -253,7 +292,8 @@ The participant with ID 100 is not checked in.
 
 ```json
 {
-    "checked_in": false
+    "checked_in": false,
+    "participant_id": 1
 }
 ```
 
@@ -283,6 +323,82 @@ The participant with ID 100 is checked in with volunteer ID 1.
 {
     "check_in_time": 1707689887,
     "checked_in": true,
+    "participant_id": 100,
     "volunteer_id": 1
+}
+```
+
+### `POST /register`
+
+Registers a new participant, and returns the participant's details if successful.
+
+A participant's data is taken in just like the `PUT /users/<int:participant_id>` endpoint, i.e. a json body with a dictionary of fields to set.
+
+```json
+{
+    "name": "Eeeeee Aaaaaa",
+    "company": "A Ltd",
+    "email": "aaaa@example.net",
+    "phone": "+1-613-123-4567",
+    "skills": [
+        {
+            "skill": "Python",
+            "rating": 4
+        },
+        {
+            "skill": "SQL",
+            "rating": 3
+        }
+    ]
+}
+```
+
+Note: there is a check for unique emails, so if the email already exists, the request will return a 400 Email Already Exists error. Since registration is rare, a full query is made to check for the email's existence.
+
+#### Example Request
+
+```
+POST /register
+{
+    "name": "Eeeeee Aaaaaa",
+    "company": "A Ltd",
+    "email": "aaaa@example.net",
+    "phone": "+1-613-123-4567",
+    "skills": [
+        {
+            "skill": "Python",
+            "rating": 4
+        },
+        {
+            "skill": "SQL",
+            "rating": 3
+        }
+    ]
+}
+```
+
+#### Example Response
+
+The participant is registered and their details are returned.
+
+```json
+{
+    "1029": {
+        "checked_in": false,
+        "company": "A Ltd",
+        "email": "aaaa@example.net",
+        "name": "Eeeeee Aaaaaa",
+        "phone": "+1-613-123-4567",
+        "skills": [
+            {
+                "rating": 4,
+                "skill": "Python"
+            },
+            {
+                "rating": 3,
+                "skill": "SQL"
+            }
+        ]
+    }
 }
 ```

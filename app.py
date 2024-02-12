@@ -32,7 +32,7 @@ class Skills(db.Model):
 
 class CheckIn(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'))
+    participant_id = db.relationship("Participant", backref="check_in")
     time = db.Column(db.Integer)
     volunteer_id = db.Column(db.Integer)
 
@@ -53,6 +53,17 @@ def generate_skills_cache():
         fresh_cache[skill.name]["total_rating"] += skill.rating
 
     return fresh_cache
+
+def new_participant_skill_to_cache(skill, rating):
+    """Updates the skills cache with a new skill, or updates the frequency and total rating of an existing skill. For when it's a participant's first time adding a skill. Not for when they update their rating."""
+    if skill not in skills_cache:
+        skills_cache[skill] = {
+            "frequency": 1,
+            "total_rating": rating
+        }
+    else:
+        skills_cache[skill]["frequency"] += 1
+        skills_cache[skill]["total_rating"] += rating
 
 # Query functions
 def format_participant_data(participant):
@@ -75,6 +86,7 @@ def format_participant_data(participant):
 
 def format_checkin_data(participant):
     output = {}
+    output["participant_id"] = participant.id
     output["checked_in"] = participant.checked_in
     if participant.checked_in:
         if not participant.check_in_id:
@@ -86,6 +98,32 @@ def format_checkin_data(participant):
     return output
 
 # Update functions
+def register_participant(participant_json):
+    # Check all fields are present
+    mandatory_fields = ["name","company","email","phone"]
+    for field in mandatory_fields:
+        if field not in participant_json:
+            return False, ({"error":f"{field} required"}, 400)
+        
+    # Check for if the email is already in use
+    if Participant.query.filter_by(email=participant_json["email"]).first():
+        return False, ({"error":"Email Already Exists"}, 400)
+
+    new_participant = Participant(name=participant_json["name"], company=participant_json["company"], email=participant_json["email"], phone=participant_json["phone"])
+    db.session.add(new_participant)
+    # # Commit the changes to generate the participant ID
+    db.session.commit()
+    for skill in participant_json["skills"]:
+        if "rating" not in skill or type(skill["rating"]) != int or skill["rating"] < 1 or skill["rating"] > 5:
+            return {"error":"Invalid rating"}, 400
+        
+        new_skill = Skills(name=skill["skill"], rating=skill["rating"], participant_id=new_participant.id)
+        db.session.add(new_skill)
+        new_participant_skill_to_cache(skill["skill"], skill["rating"])
+
+    db.session.commit()
+    return True, new_participant
+
 def update_participant(participant, request):
     simple_updatable_fields = ["name","company","email","phone"]
     for field in simple_updatable_fields:
@@ -95,8 +133,8 @@ def update_participant(participant, request):
     if "skills" in request.json:
         participants_skills = {skill.name:skill for skill in participant.skills}
         for skill in request.json["skills"]:
-            if type(skill["rating"]) != int or skill["rating"] < 1 or skill["rating"] > 5:
-                return {"error":"Invalid rating"}, 400
+            if "rating" not in skill or type(skill["rating"]) != int or skill["rating"] < 1 or skill["rating"] > 5:
+                return False
             
             if skill["skill"] not in participants_skills:
                 new_skill = Skills(name=skill["skill"], rating=skill["rating"], participant_id=participant.id)
@@ -104,14 +142,7 @@ def update_participant(participant, request):
                 participants_skills[skill["skill"]] = new_skill
 
                 # Update the skills cache
-                if skill["skill"] not in skills_cache:
-                    skills_cache[skill["skill"]] = {
-                        "frequency": 1,
-                        "total_rating": skill["rating"]
-                    }
-                else:
-                    skills_cache[skill["skill"]]["frequency"] += 1
-                    skills_cache[skill["skill"]]["total_rating"] += skill["rating"]
+                new_participant_skill_to_cache(skill["skill"], skill["rating"])
             else:
                 old_rating = participants_skills[skill["skill"]].rating
                 participants_skills[skill["skill"]].rating = skill["rating"]
@@ -120,6 +151,7 @@ def update_participant(participant, request):
                 skills_cache[skill["skill"]]["total_rating"] += skill["rating"] - old_rating
     
     db.session.commit()
+    return True
 
 
 # Helper methods for checks
@@ -148,9 +180,25 @@ def user(participant_id):
     
     if request.method == "PUT":
         if (request.json):
-            update_participant(participant, request)
+            update_worked = update_participant(participant, request)
+            if not update_worked:
+                return {"error":"Invalid update"}, 400
         
     return format_participant_data(participant)
+
+@app.route('/register', methods=['POST'])
+def register():
+    if not request.json:
+        return {"error":"Invalid request"}, 400
+    
+    # Try to register the participant, get the status and response (either an error or the new participant's object)
+    registration_status, registration_response = register_participant(request.json)
+    if not registration_status:
+        return registration_response[0], registration_response[1]
+    
+    new_participant = registration_response
+    
+    return format_participant_data(new_participant)
 
 @app.route('/skills', methods=['GET'])
 def skills():
@@ -159,9 +207,10 @@ def skills():
     max_frequency = request.args.get("max_frequency", None, type=int)
     min_average_rating = request.args.get("min_average_rating", None, type=float)
     max_average_rating = request.args.get("max_average_rating", None, type=float)
+    keyword = request.args.get("keyword", None, type=str)
 
     for skill in skills_cache:
-        if check_skill_frequency(skill, min_frequency, max_frequency) and check_skill_average_rating(skill, min_average_rating, max_average_rating):
+        if check_skill_frequency(skill, min_frequency, max_frequency) and check_skill_average_rating(skill, min_average_rating, max_average_rating) and (keyword is None or keyword.lower() in skill.lower()):
             output[skill] = {
                 "frequency": skills_cache[skill]["frequency"],
                 "average_rating": round(skills_cache[skill]["total_rating"] / skills_cache[skill]["frequency"], 2)
@@ -187,7 +236,7 @@ def checkin():
         if participant.checked_in:
             return {"error":"Already checked in"}, 400
         
-        new_checkin = CheckIn(participant_id=participant.id, time=int(time.time()), volunteer_id=request.json["volunteer_id"])
+        new_checkin = CheckIn(time=int(time.time()), volunteer_id=request.json["volunteer_id"])
         db.session.add(new_checkin)
 
         # Commit the changes to generate the check-in ID
