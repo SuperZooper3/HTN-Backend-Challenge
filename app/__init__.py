@@ -6,3 +6,8 @@ from flask_migrate import Migrate
 
 db = SQLAlchemy()
 migrate = Migrate()
+
+# Create caching for the skills' frequency and total rating (to be used in the /skills route)
+# The cache is updated by the cache helpers
+skills_cache = {}
+
