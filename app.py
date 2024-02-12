@@ -57,6 +57,7 @@ class BobaOrder(db.Model):
 # Create caching for the skills' frequency and total rating (to be used in the /skills route)
 skills_cache = {}
 
+# Generate a fresh cache of the skills' frequency and total rating
 def generate_skills_cache():
     fresh_cache = {}
     all_skills = Skills.query.all()
@@ -71,6 +72,7 @@ def generate_skills_cache():
 
     return fresh_cache
 
+# Logic for updating the skills cache when a new skill is added for a participant
 def new_participant_skill_to_cache(skill, rating):
     """Updates the skills cache with a new skill, or updates the frequency and total rating of an existing skill. For when it's a participant's first time adding a skill. Not for when they update their rating."""
     if skill not in skills_cache:
@@ -128,6 +130,8 @@ def format_boba_order_data(order):
     return output
 
 # Update functions
+
+# Register a new participant
 def register_participant(participant_json):
     # Check all fields are present
     mandatory_fields = ["name","company","email","phone"]
@@ -154,8 +158,11 @@ def register_participant(participant_json):
     db.session.commit()
     return True, new_participant
 
+
+# Update a participant's information
 def update_participant(participant, request):
     simple_updatable_fields = ["name","company","email","phone"]
+    # Iterate through the fields that can be updated, instead of over the fields given in the request
     for field in simple_updatable_fields:
         if field in request.json:
             if field == "email":
@@ -165,6 +172,7 @@ def update_participant(participant, request):
             
             participant.__setattr__(field,request.json[field])
     
+    # Update the skills
     if "skills" in request.json:
         participants_skills = {skill.name:skill for skill in participant.skills}
         for skill in request.json["skills"]:
