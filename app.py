@@ -18,7 +18,7 @@ class Participant(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     company = db.Column(db.String)
-    email = db.Column(db.String)
+    email = db.Column(db.String, unique=True)
     phone = db.Column(db.String)
     skills = db.relationship("Skills", backref="participant")
     checked_in = db.Column(db.Boolean, default=False)
@@ -128,6 +128,11 @@ def update_participant(participant, request):
     simple_updatable_fields = ["name","company","email","phone"]
     for field in simple_updatable_fields:
         if field in request.json:
+            if field == "email":
+                user_with_same_email = Participant.query.filter_by(email=request.json["email"]).first()
+                if user_with_same_email and user_with_same_email.id != participant.id:
+                    return False
+            
             participant.__setattr__(field,request.json[field])
     
     if "skills" in request.json:
