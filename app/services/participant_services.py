@@ -1,5 +1,5 @@
 from ..models.models import Participant, CheckIn, Skills, db
-from ..utils.cache_utils import new_participant_skill_to_cache, skills_cache
+from ..utils.cache_utils import new_participant_skill_to_cache, get_skills_cache, update_skills_cache
 
 # Formatters to json-ify participants
 
@@ -97,7 +97,10 @@ def update_participant(participant, request):
                 participants_skills[skill["skill"]].rating = skill["rating"]
 
                 # Update the skills cache for an updated change instead of a new addition
-                skills_cache[skill["skill"]]["total_rating"] += skill["rating"] - old_rating
+                update_skills_cache(skill["skill"],{
+                    "frequency": get_skills_cache()[skill["skill"]]["frequency"],
+                    "total_rating": get_skills_cache()[skill["skill"]]["total_rating"] + skill["rating"] - old_rating
+                })
     
     db.session.commit()
     return True
