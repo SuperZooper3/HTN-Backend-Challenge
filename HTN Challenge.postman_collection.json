@@ -90,7 +90,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://127.0.0.1:8000/users?checked_in=false&page=4",
+					"raw": "http://127.0.0.1:8000/users?checked_in=false&page=1",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -109,7 +109,7 @@
 						},
 						{
 							"key": "page",
-							"value": "4"
+							"value": "1"
 						}
 					]
 				}
@@ -192,7 +192,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"phone\": \"Mana\",\n    \"skills\":[\n        {\n            \"rating\": 1,\n            \"skill\": \"Python\"\n        }\n    ]\n}",
+					"raw": "{\n    \"phone\": \"FakePhoneNumber\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -522,6 +522,236 @@
 					"port": "8000",
 					"path": [
 						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_all_boba",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_boba_1",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba?participant_id=2",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					],
+					"query": [
+						{
+							"key": "participant_id",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_boba_invalid",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba?participant_id=bobaaaaaa",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					],
+					"query": [
+						{
+							"key": "participant_id",
+							"value": "bobaaaaaa"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_boba_in_progress",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba?status=In Progress",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "In Progress"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order_boba_default",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"participant_id\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "order_boba_custom",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"participant_id\": 2,\n    \"size\": \"Huge\",\n    \"flavour\": \"Earl Grey\",\n    \"not_a_field\": \"Mangoes\",\n    \"toppings\": \"Tapioca\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update_boba_status",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order_id\":1,\n    \"status\":\"In Progress\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update_boba_bad_status",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"order_id\":1,\n    \"status\":\"In my tummy\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba"
 					]
 				}
 			},

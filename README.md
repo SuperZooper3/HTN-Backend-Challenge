@@ -1,5 +1,8 @@
-# Hack-the-North-Backend-Challenge
+# Hack the North Backend Challenge 😋🧋 Boba Edition
+
 My Hack the North 2024 Backend Challenge submission. If you have any questions or issues, don't hesitate to reach out to me on discord at `@superzooper`.
+
+I think HTN would be 10x better if there was a free boba delivery service, so the tactical `/boba` endpoint has been included.
 
 ## Setup
 
@@ -19,7 +22,7 @@ My Hack the North 2024 Backend Challenge submission. If you have any questions o
 
 ## Database Schema
 
-The database schema consists of three tables: `Participant`, `Skills`, and `CheckIn`.
+The database schema consists of four tables: `Participant`, `Skills`, `CheckIn` and `Boba`.
 
 The `Participant` table has the following columns:
 
@@ -46,6 +49,17 @@ The `CheckIn` table has the following columns:
 - `time` (int): The time of the check-in event.
 - `volunteer_id` (int): The ID of the volunteer who checked in the participant (just a number for simplicity, but could be a foreign key to a `Volunteer` table in a real-world scenario).
 
+The `Boba` table has the following columns:
+
+- `id` (int): The unique identifier for the boba order.
+- `participant_id` (int): The ID of the participant, modeling a many-to-one relationship with the `Participant` table.
+- `status` (str): The status of the order. Default is "Placed", and can be updated to "In Progress", "Out for Delivery", "Delivered" or "Cancelled".
+- `size` (str): The size of the boba. Default is "Medium", and is free text.
+- `flavour` (str): The flavour of the boba. Default is "HK Milk Tea", and is free text.
+- `sweetness` (str): The sweetness of the boba. Default is "50% Sweet", and is free text.
+- `ice` (str): The ice level of the boba. Default is "Regular Ice", and is free text.
+- `toppings` (str): The toppings of the boba. Default is "None", and is free text.
+
 ## API Endpoints
 
 High level list:
@@ -57,6 +71,12 @@ High level list:
 - `GET /checkin`: Check if a user is checked in
 - `POST /checkin`: Check in a user with a volunteer ID
 - `POST /register`: Register a new user
+
+😋🧋
+
+- `POST /boba`: Place an order for boba
+- `GET /boba`: Get all boba orders, with optional filters for participant_id and status
+- `PUT /boba`: Update a boba order status by ID
 
 ### `GET /users`
 
@@ -413,6 +433,132 @@ The participant is registered and their details are returned.
                 "skill": "SQL"
             }
         ]
+    }
+}
+```
+
+### `GET /boba`
+
+Returns a json dictionary of all boba orders in the database with their IDs as keys.
+
+Optional arguments:
+
+- `participant_id` (int): The ID of the participant to filter the orders for. Default is no filter.
+- `status` (str): The status of the order to filter for. Default is no filter.
+
+#### Example Request
+
+```json
+GET /boba
+```
+
+#### Example Response
+
+```json
+{
+    "1": {
+        "flavour": "HK Milk Tea",
+        "ice": "Regular Ice",
+        "participant_id": 1,
+        "size": "Medium",
+        "status": "Placed",
+        "sweetness": "50% Sweet",
+        "toppings": "None"
+    },
+    "2": {
+        "flavour": "HK Milk Tea",
+        "ice": "Regular Ice",
+        "participant_id": 2,
+        "size": "Medium",
+        "status": "Placed",
+        "sweetness": "50% Sweet",
+        "toppings": "None"
+    }
+}
+```
+
+### `POST /boba`
+
+Places an order for boba, and returns the order's details.
+
+Takes the participant's ID and a json body with a dictionary of optional fields to set.
+
+```json
+{
+    "participant_id": 2,
+    "size": "Huge",
+    "flavour": "Earl Grey",
+    "not_a_field": "Mangoes",
+    "toppings": "Tapioca"
+}
+```
+
+Note: there is a check for the participant's existence, so if the participant does not exist, the request will return a 404 error.
+
+#### Example Request
+
+```json
+POST /boba
+{
+    "participant_id": 2,
+    "size": "Huge",
+    "flavour": "Earl Grey",
+    "not_a_field": "Mangoes",
+    "toppings": "Tapioca"
+}
+```
+
+#### Example Response
+
+```json
+{
+    "5": {
+        "flavour": "Earl Grey",
+        "ice": "Regular Ice",
+        "participant_id": 2,
+        "size": "Huge",
+        "status": "Placed",
+        "sweetness": "50% Sweet",
+        "toppings": "Tapioca"
+    }
+}
+```
+
+### `PUT /boba`
+
+Updates a boba order's status by ID, and returns the updated order's details.
+
+Takes a json body with the order's ID and a mandatory `status` field to update. The order must exist, and the status must be one of "In Progress", "Out for Delivery", "Delivered" or "Cancelled", or the request will return a 400 Invalid status.
+
+```json
+{
+    "status": "In Progress",
+    "order_id": 5
+}
+```
+
+### Example Request
+
+```json
+PUT /boba
+{
+    "status": "In Progress",
+    "order_id": 5
+}
+```
+
+### Example Response
+
+```json
+{
+    "5": {
+        "flavour": "Earl Grey",
+        "ice": "Regular Ice",
+        "participant_id": 2,
+        "size": "Huge",
+        "status": "In Progress",
+        "sweetness": "50% Sweet",
+        "toppings": "Tapioca"
     }
 }
 ```

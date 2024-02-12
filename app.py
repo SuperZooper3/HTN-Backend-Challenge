@@ -9,6 +9,9 @@ DATABASE_NAME = "htn.db"
 # Config settings
 PAGE_SIZE = 50
 
+# Boba Settings
+BOBA_STATUSES = ["Placed", "In Progress", "Out for Delivery", "Delivered", "Cancelled"]
+
 # Create the Flask app and connect it to the SQLite database
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATABASE_NAME}'
@@ -24,6 +27,7 @@ class Participant(db.Model):
     email = db.Column(db.String, unique=True)
     phone = db.Column(db.String)
     skills = db.relationship("Skills", backref="participant")
+    boba_orders = db.relationship("BobaOrder", backref="participant")
     checked_in = db.Column(db.Boolean, default=False)
     check_in_id = db.Column(db.Integer, db.ForeignKey('check_in.id'))
 
@@ -38,6 +42,16 @@ class CheckIn(db.Model):
     participant_id = db.relationship("Participant", backref="check_in")
     time = db.Column(db.Integer)
     volunteer_id = db.Column(db.Integer)
+
+class BobaOrder(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    participant_id = db.Column(db.Integer, db.ForeignKey('participant.id'))
+    status = db.Column(db.String, default="Placed")
+    size = db.Column(db.String, default="Medium")
+    flavour = db.Column(db.String, default="HK Milk Tea")
+    sweetness = db.Column(db.String, default="50% Sweet")
+    ice = db.Column(db.String, default="Regular Ice")
+    toppings = db.Column(db.String, default="None")
 
 
 # Create caching for the skills' frequency and total rating (to be used in the /skills route)
@@ -98,6 +112,19 @@ def format_checkin_data(participant):
         checkin = CheckIn.query.get_or_404(participant.check_in_id)
         output["check_in_time"] = checkin.time
         output["volunteer_id"] = checkin.volunteer_id
+    return output
+
+def format_boba_order_data(order):
+    output = {}
+    output[order.id] = {
+        "participant_id": order.participant_id,
+        "status": order.status,
+        "size": order.size,
+        "flavour": order.flavour,
+        "sweetness": order.sweetness,
+        "ice": order.ice,
+        "toppings": order.toppings
+    }
     return output
 
 # Update functions
@@ -161,6 +188,30 @@ def update_participant(participant, request):
     db.session.commit()
     return True
 
+def place_boba_order(order_json):
+    if "participant_id" not in order_json:
+        return False, ({"error":"Participant ID required"}, 400)
+    
+    participant = Participant.query.get(order_json["participant_id"])
+    if not participant:
+        return False, ({"error":"Participant not found"}, 404)
+    
+    new_order = BobaOrder(participant_id=participant.id)
+    if "size" in order_json:
+        new_order.size = order_json["size"]
+    if "flavour" in order_json:
+        new_order.flavour = order_json["flavour"]
+    if "sweetness" in order_json:
+        new_order.sweetness = order_json["sweetness"]
+    if "ice" in order_json:
+        new_order.ice = order_json["ice"]
+    if "toppings" in order_json:
+        new_order.toppings = order_json["toppings"]
+
+    db.session.add(new_order)
+    db.session.commit()
+    return True, new_order
+
 
 # Helper methods for checks
 def check_skill_frequency(skill, min_frequency, max_frequency):
@@ -177,13 +228,14 @@ def check_skill_average_rating(skill, min_average_rating, max_average_rating):
 def users():
     output = {}
 
-    all_participants = Participant.query.all()
+    query = Participant.query
 
     # Apply filters
     if "checked_in" in request.args:
         checked_in_needed = request.args["checked_in"].lower() == "true"
-        all_participants = [participant for participant in all_participants if participant.checked_in == checked_in_needed]
+        query = query.filter(Participant.checked_in == checked_in_needed)
 
+    # Pagination
     if "page" in request.args:
         page = request.args["page"]
         if not page.isnumeric():
@@ -193,7 +245,9 @@ def users():
         if page < 1:
             return {"error":"Invalid page number"}, 400
         
-        all_participants = all_participants[(page-1)*PAGE_SIZE:page*PAGE_SIZE]
+        query = query.offset((page-1)*PAGE_SIZE).limit(PAGE_SIZE)
+
+    all_participants = query.all()
 
     for participant in all_participants:
         output.update(format_participant_data(participant))
@@ -275,6 +329,56 @@ def checkin():
         return format_checkin_data(participant)
     
     return {"error":"Invalid request"}, 400
+
+
+@app.route('/boba', methods=['GET','POST','PUT'])
+def boba():
+    if request.method == "GET":
+        query = BobaOrder.query
+
+        if "participant_id" in request.args:
+            if not request.args["participant_id"].isnumeric():
+                return {"error":"Invalid participant ID"}, 400
+            participant_id = int(request.args["participant_id"])
+            query = query.filter(BobaOrder.participant_id == participant_id)
+
+        if "status" in request.args:
+            status = request.args["status"]
+            query = query.filter(BobaOrder.status == status)
+
+        all_orders = query.all()
+
+        output = {}
+        for order in all_orders:
+            output.update(format_boba_order_data(order))
+
+        return output
+
+    elif request.method == "POST":
+        if not request.json or "participant_id" not in request.json:
+            return {"error":"Participant ID required"}, 400
+        
+        placed_status, placed_order = place_boba_order(request.json)
+        if not placed_status:
+            return placed_order[0], placed_order[1]
+        else:
+            return format_boba_order_data(placed_order)
+
+    elif request.method == "PUT":
+        if not request.json or "order_id" not in request.json:
+            return {"error":"Order ID required"}, 400
+        
+        order = BobaOrder.query.filter_by(id=request.json["order_id"]).first()
+        if not order:
+            return {"error":"Order not found"}, 404
+        
+        if "status" in request.json and request.json["status"] in BOBA_STATUSES:
+            order.status = request.json["status"]
+        else:
+            return {"error":"Invalid status"}, 400
+        
+        db.session.commit()
+        return format_boba_order_data(order)
 
 # Run the app
 
