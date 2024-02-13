@@ -40,6 +40,7 @@ Participants can meet up and scan each other's QR code to give each other 1 boba
 - `load_data.py`: A script to load the challenge data into the database from `HTN_2023_BE_Challenge_Data.json`.
 - `investigate_data.ipynb`: A Jupyter notebook to investigate the challenge data and make decisions for the database schema.
 - `HTN Challenge.postman_collection.json`: A Postman collection with all the API requests and responses for the app.
+- `simulate_requests.py`: A script to simulate requests to the app for testing and benchmarking.
 
 ## Notes
 
