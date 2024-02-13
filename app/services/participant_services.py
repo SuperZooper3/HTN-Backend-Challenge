@@ -13,6 +13,7 @@ def format_participant_data(participant):
             "phone": participant.phone,
             "checked_in": participant.checked_in,
             "bbt_tokens": participant.bbt_tokens,
+            "bbt_tokens_last_exchange_time": participant.bbt_tokens_last_exchange_time,
             "skills": []
         }
         for skill in participant.skills:
@@ -106,3 +107,12 @@ def update_participant(participant, request):
     
     db.session.commit()
     return True
+
+# Give a participant bubble tea tokens. Returns a tuple of (success, new token count)
+def give_bbt_tokens(participant, tokens):
+    try:
+        participant.bbt_tokens += tokens
+        db.session.commit()
+        return True, participant.bbt_tokens
+    except:
+        return False, -1

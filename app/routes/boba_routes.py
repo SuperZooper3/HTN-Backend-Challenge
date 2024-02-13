@@ -1,7 +1,9 @@
 from flask import Blueprint, request
 from ..models.models import BobaOrder
+from ..services.participant_services import give_bbt_tokens
 from ..services.boba_services import *
-from config import BOBA_STATUSES
+from config import BOBA_STATUSES, BBT_TOKENS_COOLDOWN, BBT_TOKENS_PER_ORDER
+import time
 
 
 boba_bp = Blueprint('boba_bp', __name__)
@@ -33,10 +35,20 @@ def boba():
         if not request.json or "participant_id" not in request.json:
             return {"error":"Participant ID required"}, 400
         
+        participant = Participant.query.get(request.json["participant_id"])
+        if not participant:
+            return {"error":"Participant not found"}, 404
+        
+        if participant.bbt_tokens < BBT_TOKENS_PER_ORDER:
+            return {"error":"Not enough tokens to order"}, 400
+        
         placed_status, placed_order = place_boba_order(request.json)
         if not placed_status:
             return placed_order[0], placed_order[1]
         else:
+            # If the order was placed successfully, deduct the tokens from the participant
+            participant.bbt_tokens -= BBT_TOKENS_PER_ORDER
+            db.session.commit()
             return format_boba_order_data(placed_order)
 
     elif request.method == "PUT":
@@ -54,3 +66,45 @@ def boba():
         
         db.session.commit()
         return format_boba_order_data(order)
+
+    else:
+        return {"error":"Invalid request"}, 400
+    
+@boba_bp.route('/boba_info', methods=['GET'])
+def boba_info():
+    return {
+        "boba_statuses": BOBA_STATUSES,
+        "boba_tokens_per_order": BBT_TOKENS_PER_ORDER,
+        "boba_tokens_cooldown": BBT_TOKENS_COOLDOWN
+    }
+    
+@boba_bp.route('/bbt_token_exchange', methods=['PUT'])
+def bbt_token_exchange():
+    if not request.json:
+        return {"error":"Invalid request, needs json"}, 400
+    
+    if "participant_1_id" not in request.json:
+        return {"error":"participant_1_id required"}, 400
+    if "participant_2_id" not in request.json:
+        return {"error":"participant_2_id required"}, 400
+    
+    if request.json["participant_1_id"] == request.json["participant_2_id"]:
+        return {"error":"Cannot exchange tokens with yourself"}, 400
+    
+    participant_1 = Participant.query.get_or_404(request.json["participant_1_id"])
+    participant_2 = Participant.query.get_or_404(request.json["participant_2_id"])
+
+    if time.time() - participant_1.bbt_tokens_last_exchange_time < BBT_TOKENS_COOLDOWN:
+        return {"error":"Participant 1 has not waited long enough to exchange tokens"}, 400
+    
+    if time.time() - participant_2.bbt_tokens_last_exchange_time < BBT_TOKENS_COOLDOWN:
+        return {"error":"Participant 2 has not waited long enough to exchange tokens"}, 400
+
+    give_bbt_tokens(participant_1, 1)
+    give_bbt_tokens(participant_2, 1)
+
+    participant_1.bbt_tokens_last_exchange_time = int(time.time())
+    participant_2.bbt_tokens_last_exchange_time = int(time.time())
+    db.session.commit()
+
+    return {"success":"Tokens exchanged"}, 200

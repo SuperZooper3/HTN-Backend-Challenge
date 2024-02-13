@@ -11,6 +11,7 @@ class Participant(db.Model):
     skills = db.relationship("Skills", backref="participant")
     boba_orders = db.relationship("BobaOrder", backref="participant")
     bbt_tokens = db.Column(db.Integer, default=0)
+    bbt_tokens_last_exchange_time = db.Column(db.Integer, default=0)
     checked_in = db.Column(db.Boolean, default=False)
     check_in_id = db.Column(db.Integer, db.ForeignKey('check_in.id'))
 

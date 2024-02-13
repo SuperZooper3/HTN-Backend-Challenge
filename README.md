@@ -3,6 +3,7 @@
 My Hack the North 2024 Backend Challenge submission. If you have any questions or issues, don't hesitate to reach out to me on discord at `@superzooper`.
 
 I think HTN would be 10x better if there was a free boba delivery service, so the tactical `/boba` endpoint has been included.
+Participants can meet up and scan each other's QR code to give each other 1 boba token, and when they have enough tokens, they can place an order for boba delivery. This promotes social interaction and gives participants a fun way to get to know each other and **get free boba**. 😋🧋
 
 ## Setup
 
@@ -45,6 +46,15 @@ I think HTN would be 10x better if there was a free boba delivery service, so th
 - The `load_data.py` script is destructive and will delete all the data in the database before loading the challenge data.
 - All endpoints were tested with Postman and the responses were manually validated with the expected responses in the challenge description and in this specifcation. The test are included in `HTN Challenge.postman_collection.json` and have many more examples than the ones in this README.
 
+## Configuration
+
+- `DATABASE_NAME`: The name of the database file.
+- `DATABASE_URI`: The URI for the database.
+- `PAGE_SIZE`: The size of pages for pagination.
+- `BOBA_STATUSES`: The valid statuses for boba orders.
+- `BBT_TOKENS_COOLDOWN`: The cooldown time in seconds for boba token exchanges.
+- `BBT_TOKENS_PER_ORDER`: The number of boba tokens required for a boba order.
+
 ## Database Schema
 
 The database schema consists of four tables: `Participant`, `Skills`, `CheckIn` and `Boba`.
@@ -61,6 +71,7 @@ The `Participant` table has the following columns:
 - `skills` (list of `Skills`): The skills of the participant, modeled as a one-to-many relationship with the `Skills` table.
 - `boba_orders` (list of `Boba`): The boba orders of the participant, modeled as a one-to-many relationship with the `Boba` table.
 - `bbt_tokens` (int): The number of boba tokens the participant has.
+- `bbt_tokens_last_exchange_time` (int): The time of the last boba token exchange event (unix timestamp) to prevent spamming the token exchange.
 
 The `Skills` table has the following columns:
 
@@ -463,6 +474,31 @@ The participant is registered and their details are returned.
     }
 }
 ```
+### `GET /boba_info`
+
+A simple endpoint to get information about boba prices and other info. This could be upgraded to have a menu for example.
+
+#### Example Request
+
+```json
+GET /boba_info
+```
+
+#### Example Response
+
+```json
+{
+    "boba_statuses": [
+        "Placed",
+        "In Progress",
+        "Out for Delivery",
+        "Delivered",
+        "Cancelled"
+    ],
+    "boba_tokens_cooldown": 5,
+    "boba_tokens_per_order": 5
+}
+```
 
 ### `GET /boba`
 
@@ -506,7 +542,7 @@ GET /boba
 
 ### `POST /boba`
 
-Places an order for boba, and returns the order's details.
+Places an order for boba, and returns the order's details. Requires a participant ID and a json body with the order's details, and this participant must have enough boba tokens to place an order.
 
 Takes the participant's ID and a json body with a dictionary of optional fields to set.
 
@@ -587,5 +623,39 @@ PUT /boba
         "sweetness": "50% Sweet",
         "toppings": "Tapioca"
     }
+}
+```
+
+### `PUT /bbt_token_exchange`
+
+An endpoint to exchange boba tokens with another participant. This is a fun way to meet new people and get free boba.
+
+Takes the participant's ID and the other participant's ID as parameters (participant_1_id and participant_2_id).
+
+Errors include:
+
+- 404 if any participant does not exist.
+- 400
+  - Invalid request, needs json
+  - participant_(1/2)_id required
+  - Cannot exchange tokens with yourself
+  - Participant (1/2) has not waited long enough to exchange tokens
+
+#### Example Request
+
+```json
+PUT /bbt_token_exchange
+{
+    "participant_1_id": 1,
+    "participant_2_id": 2
+}
+```
+
+#### Example Response
+
+```json
+200 OK
+{
+    "success": "Tokens exchanged"
 }
 ```
