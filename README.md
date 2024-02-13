@@ -13,6 +13,31 @@ I think HTN would be 10x better if there was a free boba delivery service, so th
 - Load the challenge data with `python load_data.py`
 - Run the server with `python run.py`
 
+## App Structure
+
+- `run.py`: The entry point for the Flask app.
+- `config.py`: The configuration for the Flask app with constants.
+- `app/`: The main app package.
+  - `__init__.py`: The app factory and the database and cache setup, getters and setters.
+  - `models/`: The database models for the app.
+    - `models.py`: The database models for the app.
+  - `routes/`: The routes for the app.
+    - `participant_routes.py`: The routes for the participant and checkin endpoints.
+    - `boba_routes.py`: The routes for the boba endpoints.
+    - `skill_routes.py`: The routes for the skill endpoints.
+  - `services/`: The services for the app and database interactions.
+    - `participant_service.py`: The service for the participant and checkin like registration and updating participant info.
+    - `boba_service.py`: The service for the boba endpoints like placing or updating orders.
+    - `skill_service.py`: The service for the skill like comparison checks.
+  - `utils/`: The utility functions for the app.
+    - `cache_utils.py`: Functions to generate and update the cache.
+
+## Tools
+
+- `load_data.py`: A script to load the challenge data into the database from `HTN_2023_BE_Challenge_Data.json`.
+- `investigate_data.ipynb`: A Jupyter notebook to investigate the challenge data and make decisions for the database schema.
+- `HTN Challenge.postman_collection.json`: A Postman collection with all the API requests and responses for the app.
+
 ## Notes
 
 - An effort was made to only make one query to the database for each API request, and to use the cache for the skills endpoint.
