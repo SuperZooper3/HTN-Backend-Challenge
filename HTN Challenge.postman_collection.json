@@ -472,7 +472,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "// try running twice and notice that the user is already checked in the second time\n{\n    \"participant_id\": 1,\n    \"volunteer_id\": 1\n}",
+					"raw": "// try running twice and notice that the user is already checked in the second time\n{\n    \"participant_id\": 11,\n    \"volunteer_id\": 1\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -522,6 +522,28 @@
 					"port": "8000",
 					"path": [
 						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_boba_info",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8000/boba_info",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"boba_info"
 					]
 				}
 			},
@@ -634,6 +656,68 @@
 			"response": []
 		},
 		{
+			"name": "bbt_token_exchange",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"participant_1_id\":1,\n    \"participant_2_id\":2\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/bbt_token_exchange",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"bbt_token_exchange"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "bbt_token_admin_give",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"participant_id\": 1,\n    \"tokens\": 100000\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8000/bbt_token_admin_give",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8000",
+					"path": [
+						"bbt_token_admin_give"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "order_boba_default",
 			"request": {
 				"method": "POST",
@@ -702,7 +786,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"order_id\":1,\n    \"status\":\"In Progress\"\n}",
+					"raw": "{\n    \"order_id\":5,\n    \"status\":\"In Progress\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
