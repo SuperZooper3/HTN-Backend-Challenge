@@ -5,6 +5,8 @@ My Hack the North 2024 Backend Challenge submission. If you have any questions o
 I think HTN would be 10x better if there was a free boba delivery service, so the tactical `/boba` endpoint has been included.
 Participants can meet up and scan each other's QR code to give each other 1 boba token, and when they have enough tokens, they can place an order for boba delivery. This promotes social interaction and gives participants a fun way to get to know each other and **get free boba**. 😋🧋
 
+<img width="719" alt="image" src="https://github.com/SuperZooper3/Hack-the-North-Backend-Challenge/assets/54122151/7c73972f-b921-4c5d-8ae0-66b0e4374586">
+
 ## Setup
 
 - Install Python 3.8 or later
