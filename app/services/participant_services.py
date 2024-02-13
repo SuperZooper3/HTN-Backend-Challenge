@@ -109,7 +109,7 @@ def update_participant(participant, request):
     return True
 
 # Give a participant bubble tea tokens. Returns a tuple of (success, new token count)
-def give_bbt_tokens(participant, tokens):
+def give_bbt_tokens(participant, tokens=1):
     try:
         participant.bbt_tokens += tokens
         db.session.commit()

@@ -100,11 +100,25 @@ def bbt_token_exchange():
     if time.time() - participant_2.bbt_tokens_last_exchange_time < BBT_TOKENS_COOLDOWN:
         return {"error":"Participant 2 has not waited long enough to exchange tokens"}, 400
 
-    give_bbt_tokens(participant_1, 1)
-    give_bbt_tokens(participant_2, 1)
+    give_bbt_tokens(participant_1,tokens=1)
+    give_bbt_tokens(participant_2,tokens=1)
 
     participant_1.bbt_tokens_last_exchange_time = int(time.time())
     participant_2.bbt_tokens_last_exchange_time = int(time.time())
     db.session.commit()
 
-    return {"success":"Tokens exchanged"}, 200
+    return {"success":"Tokens exchanged", "new_tokens_1":participant_1.bbt_tokens, "new_tokens_2":participant_2.bbt_tokens}, 200
+
+@boba_bp.route('/bbt_token_admin_give', methods=['PUT'])
+def bbt_token_admin_give():
+    if not request.json:
+        return {"error":"Invalid request, needs json"}, 400
+    
+    if "participant_id" not in request.json:
+        return {"error":"participant_id required"}, 400
+    if "tokens" not in request.json:
+        return {"error":"tokens required"}, 400
+    
+    participant = Participant.query.get_or_404(request.json["participant_id"])
+    give_bbt_tokens(participant,tokens=request.json["tokens"])
+    return {"success":"Tokens given", "new_tokens":participant.bbt_tokens}, 200

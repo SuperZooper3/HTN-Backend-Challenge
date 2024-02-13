@@ -112,9 +112,12 @@ High level list:
 
 😋🧋
 
+- `GET /boba_info`: Get information about boba prices and other info
 - `POST /boba`: Place an order for boba
 - `GET /boba`: Get all boba orders, with optional filters for participant_id and status
 - `PUT /boba`: Update a boba order status by ID
+- `PUT /bbt_token_exchange`: Exchange boba tokens with another participant
+- `PUT /bbt_token_admin_give`: Force give boba tokens to a participant
 
 ### `GET /users`
 
@@ -654,8 +657,34 @@ PUT /bbt_token_exchange
 #### Example Response
 
 ```json
-200 OK
 {
+    "new_tokens_1": 400043,
+    "new_tokens_2": 13,
     "success": "Tokens exchanged"
+}
+```
+
+### `PUT /bbt_token_admin_give`
+
+An endpoint to force give boba tokens to a participant. This is useful for testing and for giving tokens to participants who have been helpful or have won a contest for example.
+
+Takes the participant's ID and the number of tokens to give as parameters (participant_id and tokens).
+
+#### Example Request
+
+```json
+PUT /bbt_token_admin_give
+{
+    "participant_id": 1,
+    "tokens": 5
+}
+```
+
+#### Example Response
+
+```json
+{
+    "new_tokens": 400042,
+    "success": "Tokens given"
 }
 ```
