@@ -11,7 +11,7 @@ I think HTN would be 10x better if there was a free boba delivery service, so th
 - Install the required packages with `pip install -r requirements.txt`
 - Initialize the database with `flask db init`, `flask db migrate`, and `flask db upgrade`
 - Load the challenge data with `python load_data.py`
-- Run the server with `python app.py`
+- Run the server with `python run.py`
 
 ## Notes
 
