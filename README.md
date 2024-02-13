@@ -59,6 +59,8 @@ The `Participant` table has the following columns:
 - `checked_in` (bool): Whether the participant has checked in.
 - `check_in_id` (int): The ID of the check-in event, if the participant has checked in.
 - `skills` (list of `Skills`): The skills of the participant, modeled as a one-to-many relationship with the `Skills` table.
+- `boba_orders` (list of `Boba`): The boba orders of the participant, modeled as a one-to-many relationship with the `Boba` table.
+- `bbt_tokens` (int): The number of boba tokens the participant has.
 
 The `Skills` table has the following columns:
 
@@ -74,7 +76,7 @@ The `CheckIn` table has the following columns:
 - `time` (int): The time of the check-in event.
 - `volunteer_id` (int): The ID of the volunteer who checked in the participant (just a number for simplicity, but could be a foreign key to a `Volunteer` table in a real-world scenario).
 
-The `Boba` table has the following columns:
+The `BobaOrders` table has the following columns:
 
 - `id` (int): The unique identifier for the boba order.
 - `participant_id` (int): The ID of the participant, modeling a many-to-one relationship with the `Participant` table.

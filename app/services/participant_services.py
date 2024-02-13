@@ -12,6 +12,7 @@ def format_participant_data(participant):
             "email": participant.email,
             "phone": participant.phone,
             "checked_in": participant.checked_in,
+            "bbt_tokens": participant.bbt_tokens,
             "skills": []
         }
         for skill in participant.skills:
@@ -67,6 +68,7 @@ def register_participant(participant_json):
 
 # Update a participant's information
 def update_participant(participant, request):
+    # To configure the fields that can be updated, add them to this list. For example bubble tea tokens and checked_in are not updatable by the user simply
     simple_updatable_fields = ["name","company","email","phone"]
     # Iterate through the fields that can be updated, instead of over the fields given in the request
     for field in simple_updatable_fields:

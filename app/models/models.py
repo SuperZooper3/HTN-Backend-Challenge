@@ -10,6 +10,7 @@ class Participant(db.Model):
     phone = db.Column(db.String)
     skills = db.relationship("Skills", backref="participant")
     boba_orders = db.relationship("BobaOrder", backref="participant")
+    bbt_tokens = db.Column(db.Integer, default=0)
     checked_in = db.Column(db.Boolean, default=False)
     check_in_id = db.Column(db.Integer, db.ForeignKey('check_in.id'))
 
